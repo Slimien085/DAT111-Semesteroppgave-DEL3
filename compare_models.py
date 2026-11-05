@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from Semester26_Model_v2 import CityModel
+from Semester26_Model import CityModel
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(HERE, "House_Prices_v2.csv"))

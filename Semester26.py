@@ -13,7 +13,7 @@ import matplotlib.image as mpimg
 from matplotlib.widgets import RadioButtons, Slider
 from matplotlib.patches import Rectangle
 
-from Semester26_Model_v2 import load_models
+from Semester26_Model import load_models
 from geo import GEO
 
 HERE = os.path.dirname(os.path.abspath(__file__))
