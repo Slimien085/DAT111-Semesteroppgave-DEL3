@@ -1,0 +1,28 @@
+HOW TO RUN THE PROJECT
+
+FIRST TIME (NEW USERS):
+Open the project folder in the terminal.
+Create a virtual environment:
+python3 -m venv .venv
+
+Activate it:
+source .venv/bin/activate
+
+Install the required libraries:
+pip install -r requirements.txt
+
+Run the project:
+python Semester26.py
+
+
+
+EVERY TIME (EXISTING USERS):
+Open the project folder.
+Get the latest changes:
+git pull
+
+Activate the virtual environment:
+source .venv/bin/activate
+
+Run the project:
+python Semester26.py
