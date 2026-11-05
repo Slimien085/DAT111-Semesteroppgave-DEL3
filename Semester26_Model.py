@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
-COLUMNS = ["x", "y", "m2", "house_type", "standard"]
+COLUMNS = ["x", "y", "m2", "house_type", "year_built", "last_renovated", "renovation_price"]
 
 
 def add_features(X: pd.DataFrame) -> pd.DataFrame:
@@ -55,8 +55,8 @@ class CityModel:
             star = "  <-- best" if (kind, d) == (self.best_kind, self.best_degree) else ""
             print(f"{kind:<9}{d:>5}{mae:>12,.0f}{r2:>9.3f}{star}")
 
-    def predict(self, x, y, m2, house_type, standard) -> float:
-        row = pd.DataFrame([[x, y, m2, house_type, standard]], columns=COLUMNS)
+    def predict(self, x, y, m2, house_type, year_built, last_renovated, renovation_price) -> float:
+        row = pd.DataFrame([[x, y, m2, house_type, year_built, last_renovated, renovation_price]], columns=COLUMNS)
         return float(self.model.predict(add_features(row))[0])
 
 

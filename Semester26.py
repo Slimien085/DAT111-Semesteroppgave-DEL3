@@ -14,18 +14,18 @@ from matplotlib.widgets import RadioButtons, Slider
 from matplotlib.patches import Rectangle
 
 from Semester26_Model import load_models
+from Semester26_Lage_Huspriser import standard_score
 from geo import GEO
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODELS = load_models(os.path.join(HERE, "House_Prices_v2.csv"))
 CITY_MAPS = {"Bergen": "Semester26_Bergen.jpg", "Stavanger": "Semester26_Stavanger.png"}
 HOUSE_TYPES = {"Enebolig": 1, "Rekke": 2, "Leilighet": 3}
-STANDARDS = {"Dårlig": 1, "God": 2, "Meget God": 3, "Luksus": 4}
-STD_COLOR = {1: "#d9534f", 2: "#f0ad4e", 3: "#9ccc65", 4: "#2e7d32"}   # rød -> grønn
+STD_CMAP = plt.get_cmap("RdYlGn")                                      # standard 1 -> 4 : rød -> grønn
 M2_LIST = [50, 100, 150, 200]
 BG = "#f4f6f8"
 
-state = {"city": "Bergen", "house_type": 1, "standard": 1, "m2": 100, "point": (41, 57)}
+state = {"city": "Bergen", "house_type": 1, "year_built": 1990, "last_renovated": 2010, "renovation_price": 500, "m2": 100, "point": (41, 57)}
 _images = {}
 
 
@@ -43,9 +43,14 @@ def load_map(city):
     return _images[city]
 
 
+def current_standard(m2=None):
+    return standard_score(state["year_built"], state["last_renovated"], state["renovation_price"], m2 or state["m2"])
+
+
 def price_per_m2(m2):
     x, y = state["point"]
-    return 1000 * MODELS[state["city"]].predict(x, y, m2, state["house_type"], state["standard"]) / m2  # data i 1000 kr
+    return 1000 * MODELS[state["city"]].predict(x, y, m2, state["house_type"],
+                                           state["year_built"], state["last_renovated"], state["renovation_price"]) / m2  # data i 1000 kr
 
 
 def draw_scale_bar(geo, km):
@@ -87,7 +92,7 @@ def draw():
     prices = [price_per_m2(m) for m in M2_LIST]
     ref = price_per_m2(100)
     ax_bar.cla()
-    ax_bar.bar([str(m) for m in M2_LIST], prices, color=STD_COLOR[state["standard"]], width=0.6)
+    ax_bar.bar([str(m) for m in M2_LIST], prices, color=STD_CMAP((current_standard() - 1) / 3), width=0.6)
     ax_bar.axhline(ref, color="black", ls="--", label=f"100 m²: {ref:,.0f} kr".replace(",", " "))
     ax_bar.set_ylim(0, max(prices + [ref]) * 1.25)
     ax_bar.yaxis.set_major_formatter(lambda v, _: f"{v / 1000:.0f}k")
@@ -105,6 +110,7 @@ def draw():
     ax_info.axis("off")
     ax_info.text(0, 1, f"Posisjon: {lat:.4f}°N, {lon:.4f}°Ø\n"
                        f"Bolig: {state['m2']} m²  ->  {total / 1e6:.2f} mill. kr\n"
+                       f"Standard: {current_standard():.1f} / 4\n"
                        f"Modell: {m.best_kind}, grad {m.best_degree}\n"
                        f"Test:  MAE {m.best_mae:,.0f}   R² {m.best_r2:.3f}".replace(",", " "),
                  va="top", fontsize=9, family="monospace", transform=ax_info.transAxes)
@@ -134,19 +140,25 @@ fig = plt.figure(figsize=(11, 7.5), facecolor=BG)
 fig.suptitle("Boligpriser per m²", fontsize=20, y=0.97)
 ax_city = fig.add_axes((0.03, 0.82, 0.22, 0.09), facecolor=BG)
 ax_type = fig.add_axes((0.03, 0.66, 0.22, 0.13), facecolor=BG)
-ax_std = fig.add_axes((0.03, 0.47, 0.22, 0.16), facecolor=BG)
-ax_slider = fig.add_axes((0.06, 0.42, 0.17, 0.02), facecolor=BG)
+ax_built = fig.add_axes((0.10, 0.60, 0.15, 0.02), facecolor=BG)
+ax_reno = fig.add_axes((0.10, 0.56, 0.15, 0.02), facecolor=BG)
+ax_rprice = fig.add_axes((0.10, 0.52, 0.15, 0.02), facecolor=BG)
+ax_slider = fig.add_axes((0.10, 0.47, 0.17, 0.02), facecolor=BG)
 ax_bar = fig.add_axes((0.06, 0.20, 0.19, 0.17))
 ax_info = fig.add_axes((0.03, 0.01, 0.30, 0.09))
 ax_map = fig.add_axes((0.36, 0.08, 0.60, 0.82))
 
 rb_city = RadioButtons(ax_city, list(CITY_MAPS))
 rb_type = RadioButtons(ax_type, list(HOUSE_TYPES))
-rb_std = RadioButtons(ax_std, list(STANDARDS))
+sl_built = Slider(ax_built, "Bygget", 1900, 2025, valinit=state["year_built"], valstep=1, valfmt="%d")
+sl_reno = Slider(ax_reno, "Oppusset", 1900, 2025, valinit=state["last_renovated"], valstep=1, valfmt="%d")
+sl_rprice = Slider(ax_rprice, "Oppussing\n(1000 kr)", 0, 3000, valinit=state["renovation_price"], valstep=50, valfmt="%d")
 slider_m2 = Slider(ax_slider, "m²", 30, 250, valinit=100, valstep=5)
 rb_city.on_clicked(on_city)
 rb_type.on_clicked(set_state("house_type", HOUSE_TYPES))
-rb_std.on_clicked(set_state("standard", STANDARDS))
+sl_built.on_changed(lambda v: (state.update(year_built=int(v)), draw()))
+sl_reno.on_changed(lambda v: (state.update(last_renovated=int(v)), draw()))
+sl_rprice.on_changed(lambda v: (state.update(renovation_price=int(v)), draw()))
 slider_m2.on_changed(lambda v: (state.update(m2=int(v)), draw()))
 fig.canvas.mpl_connect("button_press_event", on_click)
 
