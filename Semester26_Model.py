@@ -12,7 +12,7 @@ COLUMNS = ["x", "y", "m2", "house_type", "year_built", "last_renovated", "renova
 
 def add_features(X: pd.DataFrame) -> pd.DataFrame:
     X = X.copy()
-    X["x2"] = X["x"] ** 1.5      # vekter posisjon mer
+    X["x2"] = X["x"] ** 1.5 
     X["y2"] = X["y"] ** 1.5
     return X
 

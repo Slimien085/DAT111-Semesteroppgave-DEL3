@@ -63,11 +63,11 @@ def make_city(city: str, samples: int, rng) -> pd.DataFrame:
     types = np.round(rng.uniform(1, 4, samples)).astype(int)
     m2s = rng.integers(30, 250, samples)
     built = rng.integers(1900, CURRENT_YEAR + 1, samples)
-    renovated, reno_price = built.copy(), np.zeros(samples, dtype=int)   # ingen oppussing: siste = byggeår, pris 0
+    renovated, reno_price = built.copy(), np.zeros(samples, dtype=int) 
     for i in range(samples):
         if rng.random() < 0.6 and built[i] < CURRENT_YEAR:
             renovated[i] = rng.integers(built[i] + 1, CURRENT_YEAR + 1)
-            reno_price[i] = int(m2s[i] * rng.uniform(1000, 14000) / 1000)   # 1000 kr
+            reno_price[i] = int(m2s[i] * rng.uniform(1000, 14000) / 1000) 
     prices = [int(make_house_price(city, xs[i], ys[i], types[i], built[i], renovated[i], reno_price[i], m2s[i])
                   * rng.uniform(0.95, 1.05)) for i in range(samples)]
     return pd.DataFrame({"city": city, "x": xs, "y": ys, "m2": m2s, "house_type": types,

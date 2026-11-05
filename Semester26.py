@@ -21,7 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MODELS = load_models(os.path.join(HERE, "House_Prices_v2.csv"))
 CITY_MAPS = {"Bergen": "Semester26_Bergen.jpg", "Stavanger": "Semester26_Stavanger.png"}
 HOUSE_TYPES = {"Enebolig": 1, "Rekke": 2, "Leilighet": 3}
-STD_CMAP = plt.get_cmap("RdYlGn")                                      # standard 1 -> 4 : rød -> grønn
+STD_CMAP = plt.get_cmap("RdYlGn")
 M2_LIST = [50, 100, 150, 200]
 BG = "#f4f6f8"
 
@@ -35,9 +35,9 @@ def load_map(city):
         if os.path.exists(path):
             img = mpimg.imread(path)
             g = GEO[city]
-            if abs(img.shape[0] - g.h) > 1:          # Bergen: fjern bunnteksten (målestokk/logo)
+            if abs(img.shape[0] - g.h) > 1:          
                 img = img[:g.h]
-        else:                                        # fallback hvis kartbilde mangler
+        else:                                        
             img = np.dstack([np.linspace(0.85, 0.7, 100)[:, None] * np.ones((100, 100))] * 3)
         _images[city] = img
     return _images[city]
@@ -72,9 +72,8 @@ def draw():
     # ---- kart ----
     ax_map.cla()
     ax_map.imshow(img, extent=(0, 100, 0, 100), aspect="auto")
-    ax_map.set_box_aspect(h / w)                       # riktig sideforhold per by
+    ax_map.set_box_aspect(h / w)               
     ax_map.set_title(city, fontsize=14)
-    # akser i breddegrad/lengdegrad
     xt, yt = np.linspace(0, 100, 5), np.linspace(0, 100, 5)
     ax_map.set_xticks(xt)
     ax_map.set_yticks(yt)
@@ -132,7 +131,7 @@ def set_state(key, mapping):
 
 def on_city(city):
     state["city"] = city
-    state["point"] = (41, 57) if city == "Bergen" else (47, 65)       # start i sentrum
+    state["point"] = (41, 57) if city == "Bergen" else (47, 65)
     draw()
 
 
