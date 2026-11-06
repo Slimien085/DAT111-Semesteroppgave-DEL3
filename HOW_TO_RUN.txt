@@ -1,28 +1,27 @@
-HOW TO RUN THE PROJECT
+HVORDAN KJØRE PROGRAMMET
 
-FIRST TIME (NEW USERS):
-Open the project folder in the terminal.
-Create a virtual environment:
-python3 -m venv .venv
+1. Åpne mappen i terminalen (eller PyCharm).
+2. Installer bibliotekene (første gang):
+       pip install -r requirements.txt
+3. Start programmet:
+       python Semester26.py
 
-Activate it:
-source .venv/bin/activate
+Når programmet starter skrives en tabell med MAE og R² for alle modellene i terminalen,
+og så åpnes vinduet med kartet.
 
-Install the required libraries:
-pip install -r requirements.txt
+BRUKERVEILEDNING
+- Øverst til venstre velger du by (Bergen / Stavanger).
+- Under velger du boligtype (enebolig / rekke / leilighet) og standard (dårlig ... luksus).
+- Klikk et sted i kartet. Der vises estimert pris per m² (kr/m²) for et hus på 100 m².
+- Stolpediagrammet viser pris per m² for 50, 100, 150 og 200 m².
+  Fargen viser standard: rød = dårlig, gul = god, lysegrønn = meget god, grønn = luksus.
+  Den stiplede linjen viser prisen per m² for 100 m².
+- Aksene på kartet viser breddegrad (°N) og lengdegrad (°Ø).
+- Nederst til venstre står posisjonen du klikket på, hvilken modell som er brukt, og MAE og R².
 
-Run the project:
-python Semester26.py
-
-
-
-EVERY TIME (EXISTING USERS):
-Open the project folder.
-Get the latest changes:
-git pull
-
-Activate the virtual environment:
-source .venv/bin/activate
-
-Run the project:
-python Semester26.py
+FILER
+- Semester26.py                  Programmet (vindu, kart, knapper, diagram)
+- Semester26_Model.py            Maskinlæring: sammenligner modeller og lager estimatene
+- Semester26_Lage_Huspriser.py   Lager kunstige salgsdata (House_Prices.csv). Trenger ikke kjøres på nytt.
+- House_Prices.csv               Salgsdata for Bergen og Stavanger
+- Semester26_Bergen.jpg / Semester26_Stavanger.png   Kartbilder
