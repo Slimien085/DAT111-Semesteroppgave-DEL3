@@ -19,30 +19,30 @@ cities = {
 }
 
 
-def distance_factor(x1, y1, x2, y2):
+def factor_distance(x1, y1, x2, y2):
     distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
     return math.exp(-distance * 0.1)      # close to the center -> close to 1, far away -> close to 0
 
 
-def position_factor(city, x, y):
+def factor_position(city, x, y):
     w = 1
     for cx, cy, weight in cities[city]["centers"]:
-        w = w + weight * distance_factor(cx, cy, x, y)
+        w = w + weight * factor_distance(cx, cy, x, y)
     return w
 
 
-def standard_factor(standard):
+def factor_standard(standard):
     return math.sqrt(standard)
 
 
-def small_factor(m2):
+def factor_small(m2):
     # Small houses are more expensive per m2 than large houses
     t = (m2 - 50) / (200 - 50)
     t = min(max(t, 0.5), 1)               # keep t between 0.5 and 1
     return 1 - 0.5 * t
 
 
-def house_type_factor(t):
+def factor_house_type(t):
     if t == 1:        # detached house
         return 0.7
     if t == 2:        # terraced house
@@ -51,10 +51,10 @@ def house_type_factor(t):
 
 
 def make_house_price(city, x, y, house_type, standard, m2):
-    price = (position_factor(city, x, y)
-             * house_type_factor(house_type)
-             * standard_factor(standard)
-             * m2 * cities[city]["base_price"] * small_factor(m2))
+    price = (factor_position(city, x, y)
+             * factor_house_type(house_type)
+             * factor_standard(standard)
+             * m2 * cities[city]["base_price"] * factor_small(m2))
     return price
 
 
