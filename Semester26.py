@@ -126,7 +126,7 @@ def on_standard(key):
     draw_the_map()
 
 
-# Create the window
+# Create the figures
 fig = plt.figure(figsize=(10.0, 6.5), facecolor='lightgray')  # type: ignore[arg-type]
 fig.suptitle("Huspriser (per m²)", fontsize=20, y=0.97)
 
