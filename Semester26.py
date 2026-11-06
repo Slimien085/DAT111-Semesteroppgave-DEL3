@@ -1,4 +1,3 @@
-# House prices per m2 in Bergen and Stavanger. Click on the map to see the estimated price.
 import os
 import math
 import matplotlib.pyplot as plt
@@ -8,8 +7,6 @@ from Semester26_Model import predict_price, models
 
 folder = os.path.dirname(os.path.abspath(__file__))
 
-# Info about each map: image file, latitude/longitude at the center of the map and the map size in km.
-# (The numbers are calculated from the scale in the map images, so they are approximate.)
 cities = {
     "Bergen": {"file": "Semester26_Bergen.jpg", "lat": 60.3709, "lon": 5.3754,
                "width_km": 27.4, "height_km": 37.2, "start": (41, 57)},
@@ -27,7 +24,6 @@ standard_types = {
     'Meget God': 3,
     'Luksus': 4
 }
-# Bar color by standard: red = poor, yellow = medium, green = good
 standard_colors = {1: 'red', 2: 'gold', 3: 'yellowgreen', 4: 'green'}
 
 city = "Bergen"
@@ -36,7 +32,6 @@ standard_type = 1
 m2 = 100
 marked_point = cities[city]["start"]
 
-# Load the map images once
 images = {}
 for name in cities:
     image = mpimg.imread(os.path.join(folder, cities[name]["file"]))
@@ -46,11 +41,10 @@ for name in cities:
 
 
 def xy_to_latlon(x, y):
-    """Convert the map's x and y (0-100) to latitude and longitude."""
     c = cities[city]
-    km_east = (x - 50) / 100 * c["width_km"]       # km east of the center
-    km_north = (y - 50) / 100 * c["height_km"]     # km north of the center
-    lat = c["lat"] + km_north / 111.2              # 1 degree of latitude is about 111.2 km
+    km_east = (x - 50) / 100 * c["width_km"]
+    km_north = (y - 50) / 100 * c["height_km"]
+    lat = c["lat"] + km_north / 111.2
     lon = c["lon"] + km_east / (111.2 * math.cos(math.radians(c["lat"])))
     return lat, lon
 
@@ -60,13 +54,11 @@ def draw_the_map():
     image = images[city]
     height, width = image.shape[0], image.shape[1]
 
-    # ---- the map ----
     ax_map.cla()
     ax_map.imshow(image, extent=(0, 100, 0, 100), aspect='auto')
-    ax_map.set_box_aspect(height / width)           # keeps the correct shape of the map
+    ax_map.set_box_aspect(height / width)
     ax_map.set_title(city)
 
-    # The axes show latitude and longitude instead of 0-100
     ticks = [0, 25, 50, 75, 100]
     ax_map.set_xticks(ticks)
     ax_map.set_yticks(ticks)
@@ -74,17 +66,15 @@ def draw_the_map():
     ax_map.set_yticklabels([f"{xy_to_latlon(50, t)[0]:.2f}°N" for t in ticks], fontsize=8)
     ax_map.scatter(x, y, marker='+', c='blue', s=200)
 
-    # ---- prices ----
     m2list = [50, 100, 150, 200]
     price_m2 = [predict_price(city, x, y, _m2, house_type, standard_type) / _m2 * 1000 for _m2 in m2list]
-    price_100 = predict_price(city, x, y, 100, house_type, standard_type) / 100 * 1000   # NOK per m2 for 100 m2
+    price_100 = predict_price(city, x, y, 100, house_type, standard_type) / 100 * 1000
     price_selected = predict_price(city, x, y, m2, house_type, standard_type) / m2 * 1000
 
     price = f"{round(price_selected, -2):,.0f} kr/m²".replace(",", " ")
     ax_map.text(min(x + 3, 60), max(y - 4, 5), price, color='blue', fontsize=12,
                 bbox=dict(facecolor='white', alpha=0.8, edgecolor='none'))
 
-    # ---- bar chart ----
     ax_history.cla()
     ax_history.bar([str(v) for v in m2list], price_m2, color=standard_colors[standard_type], width=0.6)
     ax_history.axhline(price_100, color='black', linestyle='--',
@@ -97,7 +87,6 @@ def draw_the_map():
     ax_history.set_title("Pris per m²", fontsize=10)
     ax_history.legend(fontsize=8, loc="upper right")
 
-    # ---- info about the model ----
     lat, lon = xy_to_latlon(x, y)
     m = models[city]
     ax_info.cla()

@@ -1,18 +1,15 @@
-# Creates artificial house prices for Bergen and Stavanger and saves them in House_Prices.csv
 import math
 import numpy as np
 import pandas as pd
 
-# For each city: where the most expensive areas are (x, y, weight) and base price per m2 (in 1000 NOK).
-# x and y are the position on the map from 0 to 100.
 cities = {
     "Bergen": {
-        "centers": [(41, 57, 1.5),   # City center
+        "centers": [(41, 57, 1.5),   # Sentrum
                     (45, 18, 0.5)],  # Fana
         "base_price": 75.0,
     },
     "Stavanger": {
-        "centers": [(47, 65, 1.4),   # City center (Breiavatnet)
+        "centers": [(47, 65, 1.4),   # Sentrum
                     (34, 45, 0.6)],  # Madla
         "base_price": 70.0,
     },
@@ -21,7 +18,7 @@ cities = {
 
 def factor_distance(x1, y1, x2, y2):
     distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-    return math.exp(-distance * 0.1)      # close to the center -> close to 1, far away -> close to 0
+    return math.exp(-distance * 0.1)
 
 
 def factor_position(city, x, y):
@@ -36,18 +33,17 @@ def factor_standard(standard):
 
 
 def factor_small(m2):
-    # Small houses are more expensive per m2 than large houses
-    t = (m2 - 50) / (200 - 50)
-    t = min(max(t, 0.5), 1)               # keep t between 0.5 and 1
-    return 1 - 0.5 * t
+    t = (m2 - 50) / (200 - 50)     # normalize 50→300 to 0→1
+    t = min(max(t, 0.5), 1)           # keep inside range
+    return 1 - 0.5 * t             # linear inverse
 
 
 def factor_house_type(t):
-    if t == 1:        # detached house
+    if t == 1:
         return 0.7
-    if t == 2:        # terraced house
+    if t == 2:
         return 1.0
-    return 1.2        # apartment
+    return 1.2
 
 
 def make_house_price(city, x, y, house_type, standard, m2):
@@ -59,20 +55,20 @@ def make_house_price(city, x, y, house_type, standard, m2):
 
 
 np.random.seed(1234)
-count = 400                                # number of sales per city
+count = 400
 tables = []
 
 for city in cities:
     xs = np.random.randint(0, 100, count)
     ys = np.random.randint(0, 100, count)
-    house_types = np.random.randint(1, 4, count)         # 1, 2 or 3
+    house_types = np.random.randint(1, 4, count)
     standards = np.random.uniform(1.0, 4.0, count)
     m2s = np.random.randint(30, 250, count)
 
     prices = []
     for i in range(count):
         price = make_house_price(city, xs[i], ys[i], house_types[i], standards[i], m2s[i])
-        price = price * np.random.uniform(0.95, 1.05)     # a bit of random noise
+        price = price * np.random.uniform(0.95, 1.05)
         prices.append(int(price))
 
     table = pd.DataFrame({
