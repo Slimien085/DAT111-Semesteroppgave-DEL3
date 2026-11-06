@@ -1,73 +1,95 @@
+# Lager kunstige huspriser for Bergen og Stavanger og lagrer dem i House_Prices.csv
 import math
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+# For hver by: hvor de dyreste områdene ligger (x, y, vekt) og grunnpris per m2 (i 1000 kr).
+# x og y er posisjon på kartet fra 0 til 100.
+byer = {
+    "Bergen": {
+        "sentre": [(41, 57, 1.5),   # Sentrum
+                   (45, 18, 0.5)],  # Fana
+        "grunnpris": 75.0,
+    },
+    "Stavanger": {
+        "sentre": [(47, 65, 1.4),   # Sentrum (Breiavatnet)
+                   (34, 45, 0.6)],  # Madla
+        "grunnpris": 70.0,
+    },
+}
 
 
+def faktor_avstand(x1, y1, x2, y2):
+    avstand = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    return math.exp(-avstand * 0.1)       # nær senteret -> nær 1, langt unna -> nær 0
 
-def faktor_distance(x1:int, y1:int, x2:int, y2:int) ->float:
-    dist = np.sqrt((x1-x2)**2 + (y1-y2)**2)
-    return math.exp(-dist*0.1)
 
-def factor_position(x:int, y:int)->float:
-    w = (1
-         + 1.5 * faktor_distance(40, 58, x, y)  # Sentrum
-         + 0.5 * faktor_distance(40, 20, x, y)  # Fana
-         )
+def faktor_posisjon(by, x, y):
+    w = 1
+    for sx, sy, vekt in byer[by]["sentre"]:
+        w = w + vekt * faktor_avstand(sx, sy, x, y)
     return w
 
-def factor_standard(standard:int)->float:
-    return np.sqrt(standard)
 
-def factor_small(m2):
-    t = (m2 - 50) / (200 - 50)     # normalize 50→300 to 0→1
-    t = np.clip(t, 0.5, 1)           # keep inside range
-    return 1 - 0.5 * t             # linear inverse
+def faktor_standard(standard):
+    return math.sqrt(standard)
 
-def norm_price(m2:int)->float:
-    factor = factor_small(m2)
-    return m2 *  75.000 * factor
 
-def factor_house_type(t:int)->float:
-    if t==1:
+def faktor_sma(m2):
+    # Små hus er dyrere per m2 enn store hus
+    t = (m2 - 50) / (200 - 50)
+    t = min(max(t, 0.5), 1)               # hold t mellom 0.5 og 1
+    return 1 - 0.5 * t
+
+
+def faktor_boligtype(t):
+    if t == 1:        # enebolig
         return 0.7
-    if t==2:
+    if t == 2:        # rekkehus
         return 1.0
-    if t==3:
-        return 1.2
-    return 1
+    return 1.2        # leilighet
 
-def make_house_price(x:int, y:int, house_type:int, standard:int, m2:int)->float:
-    price = (factor_position(x, y)
-             *factor_house_type(house_type)
-             *factor_standard(standard)
-             *norm_price(m2))
-    return price
+
+def lag_huspris(by, x, y, boligtype, standard, m2):
+    pris = (faktor_posisjon(by, x, y)
+            * faktor_boligtype(boligtype)
+            * faktor_standard(standard)
+            * m2 * byer[by]["grunnpris"] * faktor_sma(m2))
+    return pris
+
 
 np.random.seed(1234)
-samples = 256
-xs = np.random.randint(0, 100, samples)
-ys = np.random.randint(0, 100, samples)
-house_types = np.round(np.random.uniform(1, 4, samples)).astype(int)
-standards = np.random.uniform(1.0, 4.0, samples)
-m2s = np.random.randint(30, 250, samples)
-sales_price = np.zeros(samples, dtype=int)
-print(f" x0, y0 : {xs[0]}, {ys[0]}")
-for i in range(samples) :
-    sales_price[i] = make_house_price(xs[i], ys[i], house_types[i], standards[i], m2s[i]) * np.random.uniform(0.95, 1.05)
+antall = 400                               # antall salg per by
+tabeller = []
 
-# DataFrame
-df = pd.DataFrame({
-    "x": xs,
-    "y": ys,
-    "m2": m2s,
-    "house_type": house_types,
-    "standard": np.round(standards, 1),
-    "sales_price": sales_price
-})
+for by in byer:
+    xs = np.random.randint(0, 100, antall)
+    ys = np.random.randint(0, 100, antall)
+    boligtyper = np.random.randint(1, 4, antall)         # 1, 2 eller 3
+    standarder = np.random.uniform(1.0, 4.0, antall)
+    m2s = np.random.randint(30, 250, antall)
 
+    priser = []
+    for i in range(antall):
+        pris = lag_huspris(by, xs[i], ys[i], boligtyper[i], standarder[i], m2s[i])
+        pris = pris * np.random.uniform(0.95, 1.05)       # litt tilfeldig støy
+        priser.append(int(pris))
+
+    tabell = pd.DataFrame({
+        "city": by,
+        "x": xs,
+        "y": ys,
+        "m2": m2s,
+        "house_type": boligtyper,
+        "standard": np.round(standarder, 1),
+        "sales_price": priser,
+    })
+    tabeller.append(tabell)
+
+df = pd.concat(tabeller, ignore_index=True)
 df.to_csv("House_Prices.csv", index=False)
 
-# print(df.head())
-print("CSV file 'House_Prices.csv' created successfully.")
-print(f"Sentrum (leil, 100m2, god std) = {make_house_price(40, 58, 3, 3, 100):>10,.0f}") # Sentrum !
-print(f"Åsane (leil, 100m2, god std)   = {make_house_price(40, 78, 3, 3, 100):>10,.0f}") # Sentrum !
+print("Filen House_Prices.csv er laget:", len(df), "rader")
+for by in byer:
+    sx, sy, _ = byer[by]["sentre"][0]
+    print(f"{by} sentrum (leilighet, 100 m2, standard 3) = {lag_huspris(by, sx, sy, 3, 3, 100):>10,.0f}")
